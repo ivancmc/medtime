@@ -2,7 +2,8 @@ const CACHE_NAME = 'medtime-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon.jpg'
 ];
 
 self.addEventListener('install', event => {
@@ -39,8 +40,8 @@ self.addEventListener('push', event => {
   const title = data.title || 'Lembrete de Medicamento';
   const options = {
     body: data.body || 'Está na hora de tomar seu medicamento.',
-    icon: data.icon || 'https://api.dicebear.com/7.x/identicon/svg?seed=medtime',
-    badge: data.badge || 'https://api.dicebear.com/7.x/identicon/svg?seed=medtime',
+    icon: data.icon || '/icon.jpg',
+    badge: data.badge || '/icon.jpg',
     vibrate: data.vibrate || [100, 50, 100],
     data: data.data || { url: '/' }
   };

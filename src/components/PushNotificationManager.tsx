@@ -103,11 +103,11 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
       const registration = await navigator.serviceWorker.ready;
       registration.showNotification("MedTime - Teste Local", {
         body: "Esta é uma notificação local enviada através do Service Worker!",
-        icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
-        badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
+        icon: "/icon.jpg",
+        badge: "/icon.jpg",
         vibrate: [100, 50, 100],
         data: { url: "/" }
-      });
+      } as any);
     } catch (err: any) {
       setError("Não foi possível enviar a notificação local.");
     }
@@ -126,11 +126,11 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
           navigator.serviceWorker.ready.then((registration) => {
             registration.showNotification("MedTime - Notificação Agendada", {
               body: "Seu remédio está agendado para agora! (Simulador de segundo plano)",
-              icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
-              badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
+              icon: "/icon.jpg",
+              badge: "/icon.jpg",
               vibrate: [200, 100, 200],
               data: { url: "/" }
-            });
+            } as any);
           });
           return null;
         }
