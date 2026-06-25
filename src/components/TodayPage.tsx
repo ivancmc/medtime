@@ -72,10 +72,22 @@ export function TodayPage() {
       // Check if we already notified for this dose in localStorage to prevent spam
       const notifiedKey = `notified_${dose.id}`;
       if (!localStorage.getItem(notifiedKey)) {
-        new Notification("Hora do Remédio!", {
+        const notificationTitle = "Hora do Remédio!";
+        const notificationOptions = {
           body: `É hora de dar ${dose.medicationName} para ${personName}.`,
-          icon: "/manifest-icon-192.maskable.png", // using placeholder if any
-        });
+          icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
+          badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
+          vibrate: [200, 100, 200],
+          data: { url: "/" },
+        };
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification(notificationTitle, notificationOptions);
+          });
+        } else if ("Notification" in window) {
+          new Notification(notificationTitle, notificationOptions);
+        }
         localStorage.setItem(notifiedKey, "true");
       }
     });
