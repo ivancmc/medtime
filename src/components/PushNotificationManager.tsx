@@ -67,12 +67,12 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
     try {
       const registration = await navigator.serviceWorker.ready;
       const applicationServerKey = urlBase64ToUint8Array(DEFAULT_VAPID_PUBLIC_KEY);
-      
+
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey
       });
-      
+
       setSubscription(sub);
     } catch (err: any) {
       console.error("Sub failed: ", err);
@@ -101,10 +101,10 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
   async function testLocalNotification() {
     try {
       const registration = await navigator.serviceWorker.ready;
-      registration.showNotification("MedMinder - Teste Local", {
+      registration.showNotification("MedTime - Teste Local", {
         body: "Esta é uma notificação local enviada através do Service Worker!",
-        icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
-        badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
+        icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
+        badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
         vibrate: [100, 50, 100],
         data: { url: "/" }
       });
@@ -115,7 +115,7 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
 
   function testSimulatedPush() {
     if (countdown !== null) return;
-    
+
     setCountdown(5);
     const interval = setInterval(() => {
       setCountdown((prev) => {
@@ -124,10 +124,10 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
           clearInterval(interval);
           // Trigger notification
           navigator.serviceWorker.ready.then((registration) => {
-            registration.showNotification("MedMinder - Notificação Agendada", {
+            registration.showNotification("MedTime - Notificação Agendada", {
               body: "Seu remédio está agendado para agora! (Simulador de segundo plano)",
-              icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
-              badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
+              icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
+              badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
               vibrate: [200, 100, 200],
               data: { url: "/" }
             });
@@ -192,8 +192,8 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
             disabled={isLoading}
             className="w-full py-3 bg-app-primary-solid text-app-primary-solid-text font-bold text-sm rounded-2xl shadow-md hover:opacity-90 transition active:scale-98 disabled:opacity-50"
           >
-            {permission === "denied" 
-              ? "Notificações Bloqueadas no Navegador" 
+            {permission === "denied"
+              ? "Notificações Bloqueadas no Navegador"
               : "Habilitar Permissão de Notificações"}
           </button>
         )}
@@ -228,7 +228,7 @@ export function PushNotificationManager({ onClose }: PushNotificationManagerProp
               <p className="text-xs text-app-muted leading-relaxed">
                 Você está inscrito para receber notificações externas. Copie os dados da inscrição para testar o envio de Web Push de um servidor.
               </p>
-              
+
               <div className="relative">
                 <pre className="text-[10px] font-mono bg-app-input border border-app-border rounded-2xl p-4 overflow-x-auto max-h-36 text-app-muted select-all">
                   {JSON.stringify(subscription, null, 2)}

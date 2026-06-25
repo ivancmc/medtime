@@ -8,8 +8,8 @@ export function PWAInstallPrompt() {
 
   useEffect(() => {
     // Check if app is already running in standalone mode (already installed)
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches 
-      || (navigator as any).standalone 
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+      || (navigator as any).standalone
       || document.referrer.includes("android-app://");
 
     if (isStandalone) {
@@ -39,15 +39,15 @@ export function PWAInstallPrompt() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    
+
     setIsVisible(false);
     // Show the native browser install prompt
     deferredPrompt.prompt();
-    
+
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`PWA install prompt choice: ${outcome}`);
-    
+
     // We no longer need the prompt, clear it
     setDeferredPrompt(null);
   };
@@ -77,7 +77,7 @@ export function PWAInstallPrompt() {
               </div>
               <div>
                 <h3 className="font-bold text-app-text text-base flex items-center gap-1.5">
-                  Instalar MedMinder <Sparkles size={14} className="text-amber-500 fill-amber-500" />
+                  Instalar MedTime <Sparkles size={14} className="text-amber-500 fill-amber-500" />
                 </h3>
                 <p className="text-xs text-app-muted mt-1 leading-normal">
                   Acesse instantaneamente da sua tela inicial, offline e receba alertas de remédios no seu celular.

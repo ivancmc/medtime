@@ -75,8 +75,8 @@ export function TodayPage() {
         const notificationTitle = "Hora do Remédio!";
         const notificationOptions = {
           body: `É hora de dar ${dose.medicationName} para ${personName}.`,
-          icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
-          badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
+          icon: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
+          badge: "https://api.dicebear.com/7.x/identicon/svg?seed=medtime",
           vibrate: [200, 100, 200],
           data: { url: "/" },
         };

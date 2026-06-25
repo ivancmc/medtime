@@ -30,7 +30,7 @@ export default function App() {
         >
           <Users size={20} />
         </button>
-        <div className="font-bold text-lg text-app-primary">MedMinder</div>
+        <div className="font-bold text-lg text-app-primary">MedTime</div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setIsNotificationOpen(true)}

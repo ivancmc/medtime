@@ -1,4 +1,4 @@
-const CACHE_NAME = 'medminder-v1';
+const CACHE_NAME = 'medtime-v1';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -39,8 +39,8 @@ self.addEventListener('push', event => {
   const title = data.title || 'Lembrete de Medicamento';
   const options = {
     body: data.body || 'Está na hora de tomar seu medicamento.',
-    icon: data.icon || 'https://api.dicebear.com/7.x/identicon/svg?seed=medminder',
-    badge: data.badge || 'https://api.dicebear.com/7.x/identicon/svg?seed=medminder',
+    icon: data.icon || 'https://api.dicebear.com/7.x/identicon/svg?seed=medtime',
+    badge: data.badge || 'https://api.dicebear.com/7.x/identicon/svg?seed=medtime',
     vibrate: data.vibrate || [100, 50, 100],
     data: data.data || { url: '/' }
   };
@@ -52,7 +52,7 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  
+
   const urlToOpen = new URL(event.notification.data?.url || '/', self.location.origin).href;
 
   event.waitUntil(
