@@ -1,0 +1,21 @@
+{
+  "name": "MedMinder",
+  "short_name": "MedMinder",
+  "description": "Gestão de lembretes de medicação",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "https://api.dicebear.com/7.x/identicon/svg?seed=medminder",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

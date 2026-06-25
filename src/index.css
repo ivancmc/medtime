@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-app-bg: var(--app-bg);
+  --color-app-surface: var(--app-surface);
+  --color-app-input: var(--app-input);
+  --color-app-text: var(--app-text);
+  --color-app-muted: var(--app-muted);
+  --color-app-border: var(--app-border);
+
+  --color-app-primary: var(--app-primary);
+  --color-app-primary-bg: var(--app-primary-bg);
+  --color-app-primary-solid: var(--app-primary-solid);
+  --color-app-primary-solid-text: var(--app-primary-solid-text);
+
+  --color-app-danger: var(--app-danger);
+  --color-app-danger-bg: var(--app-danger-bg);
+
+  --color-app-success: var(--app-success);
+  --color-app-success-bg: var(--app-success-bg);
+}
+
+:root {
+  --app-bg: var(--color-gray-50);
+  --app-surface: var(--color-white);
+  --app-input: var(--color-gray-50);
+  --app-text: var(--color-gray-900);
+  --app-muted: var(--color-gray-500);
+  --app-border: var(--color-gray-200);
+
+  --app-primary: var(--color-indigo-600);
+  --app-primary-bg: var(--color-indigo-50);
+  --app-primary-solid: var(--color-indigo-600);
+  --app-primary-solid-text: var(--color-white);
+
+  --app-danger: var(--color-red-500);
+  --app-danger-bg: var(--color-red-50);
+
+  --app-success: var(--color-emerald-500);
+  --app-success-bg: var(--color-emerald-50);
+}
+
+.dark {
+  color-scheme: dark;
+  --app-bg: var(--color-zinc-950);
+  --app-surface: var(--color-zinc-900);
+  --app-input: var(--color-zinc-800);
+  --app-text: var(--color-zinc-100);
+  --app-muted: var(--color-zinc-400);
+  --app-border: var(--color-zinc-800);
+
+  --app-primary: var(--color-indigo-400);
+  --app-primary-bg: color-mix(
+    in srgb,
+    var(--color-indigo-400) 15%,
+    transparent
+  );
+  --app-primary-solid: var(--color-indigo-500);
+  --app-primary-solid-text: var(--color-white);
+
+  --app-danger: var(--color-red-400);
+  --app-danger-bg: color-mix(in srgb, var(--color-red-400) 15%, transparent);
+
+  --app-success: var(--color-emerald-400);
+  --app-success-bg: color-mix(
+    in srgb,
+    var(--color-emerald-400) 15%,
+    transparent
+  );
+}
+
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+body {
+  @apply bg-app-bg text-app-text antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
