@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../lib/db";
 import { Person } from "../types";
-import { format, addDays, addHours } from "date-fns";
+import { format, addHours } from "date-fns";
+import { getOrCreatePushSubscription, registerPushTriggers } from "../lib/push";
+import { CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+
+type PushStatus = "idle" | "loading" | "success" | "error";
 
 export function AddPage({ onAdded }: { onAdded: () => void }) {
   const [people, setPeople] = useState<Person[]>([]);
+  const [pushStatus, setPushStatus] = useState<PushStatus>("idle");
+  const [pushMessage, setPushMessage] = useState("");
 
   // Form states
   const [medPersonId, setMedPersonId] = useState("");
@@ -29,6 +35,7 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
     const freqHours = parseInt(medFreqHours);
     const durationDays = parseInt(medDurationDays);
 
+    // ── 1. Persist medication to local IndexedDB ──────────────────────────
     const med = await db.medications.add({
       personId: medPersonId,
       name: medName,
@@ -41,6 +48,7 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
     });
 
     const totalDoses = Math.floor((durationDays * 24) / freqHours);
+    const timestamps: number[] = [];
     let currentDoseTime = startTimestamp;
 
     for (let i = 0; i < totalDoses; i++) {
@@ -52,13 +60,57 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
         status: "pending",
         isAntibiotic: medIsAntibiotic,
       });
-      currentDoseTime = addHours(
-        new Date(currentDoseTime),
-        freqHours,
-      ).getTime();
+      timestamps.push(currentDoseTime);
+      currentDoseTime = addHours(new Date(currentDoseTime), freqHours).getTime();
     }
 
+    // ── 2. Register push triggers in Supabase (non-blocking for UX) ────────
+    void schedulePushTriggers(timestamps);
+
     onAdded();
+  }
+
+  /**
+   * Requests notification permission, gets/creates VAPID subscription,
+   * then inserts one push_trigger row per future timestamp in Supabase.
+   * Only future timestamps are sent — no medication names leave the device.
+   */
+  async function schedulePushTriggers(timestamps: number[]) {
+    setPushStatus("loading");
+
+    try {
+      // Request permission if not granted yet
+      if (Notification.permission === "default") {
+        const result = await Notification.requestPermission();
+        if (result !== "granted") {
+          setPushStatus("error");
+          setPushMessage("Permissão de notificação negada. Os lembretes não serão enviados.");
+          return;
+        }
+      }
+
+      if (Notification.permission === "denied") {
+        setPushStatus("error");
+        setPushMessage("Notificações bloqueadas. Habilite-as nas configurações do navegador.");
+        return;
+      }
+
+      const subscription = await getOrCreatePushSubscription();
+      if (!subscription) {
+        setPushStatus("error");
+        setPushMessage("Este navegador não suporta Push Notifications.");
+        return;
+      }
+
+      await registerPushTriggers(subscription, timestamps);
+
+      setPushStatus("success");
+      setPushMessage(`${timestamps.filter((t) => t > Date.now()).length} lembretes agendados!`);
+    } catch (err) {
+      console.error("[MedTime] Push scheduling failed:", err);
+      setPushStatus("error");
+      setPushMessage("Falha ao agendar notificações. O lembrete foi salvo localmente.");
+    }
   }
 
   return (
@@ -181,6 +233,34 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
           Criar Lembrete
         </button>
       </form>
+
+      {/* Push scheduling feedback — appears after form submit */}
+      {pushStatus !== "idle" && (
+        <div
+          className={`mt-4 flex items-start gap-3 p-4 rounded-xl text-sm border transition-all ${
+            pushStatus === "success"
+              ? "bg-app-success-bg border-app-success/30 text-app-success"
+              : pushStatus === "error"
+                ? "bg-app-danger-bg border-app-danger/30 text-app-danger"
+                : "bg-app-primary-bg border-app-primary/20 text-app-primary"
+          }`}
+        >
+          {pushStatus === "loading" && (
+            <Loader2 size={18} className="shrink-0 animate-spin mt-0.5" />
+          )}
+          {pushStatus === "success" && (
+            <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
+          )}
+          {pushStatus === "error" && (
+            <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+          )}
+          <span>
+            {pushStatus === "loading"
+              ? "Agendando notificações push..."
+              : pushMessage}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
