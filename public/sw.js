@@ -77,10 +77,19 @@ async function handlePush(event) {
   // ── Look up matching dose in local IndexedDB via localforage ─────────────
   const notificationOptions = await buildNotificationOptions(scheduledTime);
 
-  return self.registration.showNotification(
+  await self.registration.showNotification(
     notificationOptions.title,
     notificationOptions,
   );
+
+  // ── Inform page clients so local polling won't double-fire ───────────────
+  // The tag encodes medicationId + scheduledTime, matching what TodayPage uses.
+  if (notificationOptions.tag && notificationOptions.tag !== 'medtime-generic') {
+    const allClients = await self.clients.matchAll({ includeUncontrolled: true });
+    allClients.forEach((client) =>
+      client.postMessage({ type: 'PUSH_NOTIFIED', tag: notificationOptions.tag }),
+    );
+  }
 }
 
 /**

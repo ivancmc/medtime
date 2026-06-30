@@ -114,12 +114,32 @@ export function TodayPage() {
       Notification.requestPermission();
     }
 
+    // Listen for PUSH_NOTIFIED messages from the SW so local polling
+    // won't fire a duplicate notification for the same dose.
+    const handleSwMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "PUSH_NOTIFIED" || !event.data.tag) return;
+      // tag = "medtime-dose-{medicationId}-{scheduledTime}"
+      // We don't have the dose.id here, but we can derive the notifiedKey
+      // by scanning localStorage for matching tags stored during push.
+      // Simpler: store by tag directly so checkNotifications can cross-check.
+      localStorage.setItem(`push_tag_${event.data.tag}`, "1");
+    };
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", handleSwMessage);
+    }
+
     // Check for pending doses every minute
     const interval = setInterval(() => {
       checkNotifications();
     }, 60000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", handleSwMessage);
+      }
+    };
   }, [selectedDate]);
 
   async function checkNotifications() {
@@ -129,7 +149,8 @@ export function TodayPage() {
     const d = await db.doses.getAll();
     const p = await db.people.getAll();
     const now = Date.now();
-    // find doses scheduled in the last 5 minutes that are still pending
+
+    // Doses due in the last 5 minutes that are still pending
     const recentPending = d.filter(
       (dose) =>
         dose.status === "pending" &&
@@ -137,32 +158,63 @@ export function TodayPage() {
         now - dose.scheduledTime < 5 * 60 * 1000,
     );
 
-    recentPending.forEach((dose) => {
+    // Grab any active SW notifications so we can skip ones already shown by push
+    let activeNotificationTags = new Set<string>();
+    if ("serviceWorker" in navigator) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const active = await reg.getNotifications();
+        active.forEach((n) => activeNotificationTags.add(n.tag));
+      } catch {
+        // getNotifications not supported — fall through to localStorage check only
+      }
+    }
+
+    for (const dose of recentPending) {
       const person = p.find((person) => person.id === dose.personId);
       const personName = person ? person.name : "Alguém";
 
-      // Check if we already notified for this dose in localStorage to prevent spam
+      // Tag must match what sw.js sets so the browser deduplicates them
+      const tag = `medtime-dose-${dose.medicationId}-${dose.scheduledTime}`;
       const notifiedKey = `notified_${dose.id}`;
-      if (!localStorage.getItem(notifiedKey)) {
-        const notificationTitle = "Hora do Remédio!";
-        const notificationOptions = {
-          body: `Hora do ${dose.medicationName} para ${personName}.`,
-          icon: "/icon.jpg",
-          badge: "/icon.jpg",
-          vibrate: [200, 100, 200],
-          data: { url: "/" },
-        };
 
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.ready.then((registration) => {
-            registration.showNotification(notificationTitle, notificationOptions);
-          });
-        } else if ("Notification" in window) {
-          new Notification(notificationTitle, notificationOptions);
-        }
-        localStorage.setItem(notifiedKey, "true");
+      // Skip if the SW push already showed this notification (tag is live)
+      if (activeNotificationTags.has(tag)) {
+        localStorage.setItem(notifiedKey, "push");
+        continue;
       }
-    });
+
+      // Skip if SW sent us a message that push was already handled
+      // (covers dismissed notifications that are no longer "active")
+      if (localStorage.getItem(`push_tag_${tag}`)) {
+        localStorage.setItem(notifiedKey, "push");
+        continue;
+      }
+
+      // Skip if already handled in a previous polling cycle
+      if (localStorage.getItem(notifiedKey)) continue;
+
+      // Fallback: show local notification
+      const notificationTitle = "Hora do Remédio!";
+      const notificationOptions = {
+        body: `Hora do ${dose.medicationName} para ${personName}.`,
+        icon: "/icon.jpg",
+        badge: "/icon.jpg",
+        vibrate: [200, 100, 200],
+        data: { url: "/" },
+        tag,
+        renotify: false,
+      };
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(notificationTitle, notificationOptions);
+        });
+      } else if ("Notification" in window) {
+        new Notification(notificationTitle, notificationOptions);
+      }
+      localStorage.setItem(notifiedKey, "local");
+    }
   }
 
   async function loadData() {
