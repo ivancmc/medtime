@@ -127,12 +127,16 @@ async function buildNotificationOptions(scheduledTime) {
 
     if (!due) return FALLBACK;
 
-    // Look up the person name for a personalised notification
-    const people = (await localforage.getItem('people')) ?? [];
+    // Look up person name and medication dosage (dosage lives in medications, not doses)
+    const [people, medications] = await Promise.all([
+      localforage.getItem('people').then((v) => v ?? []),
+      localforage.getItem('medications').then((v) => v ?? []),
+    ]);
     const person = people.find((p) => p.id === due.personId);
     const personLabel = person ? ` para ${person.name}` : '';
 
-    const dosageLabel = due.dosage ? `(${due.dosage}) ` : '';
+    const med = medications.find((m) => m.id === due.medicationId);
+    const dosageLabel = med?.dosage ? `(${med.dosage}) ` : '';
     const antibioticLabel = due.isAntibiotic ? ' ⚠️ Antibiótico' : '';
 
     return {
