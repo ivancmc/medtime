@@ -123,12 +123,12 @@ async function buildNotificationOptions(scheduledTime) {
     const person = people.find((p) => p.id === due.personId);
     const personLabel = person ? ` para ${person.name}` : '';
 
-    const dosageLabel = due.dosage ? ` — ${due.dosage}` : '';
+    const dosageLabel = due.dosage ? `${due.dosage} ` : '';
     const antibioticLabel = due.isAntibiotic ? ' ⚠️ Antibiótico' : '';
 
     return {
       title: `💊 ${due.medicationName}${antibioticLabel}`,
-      body: `Hora de tomar${personLabel}${dosageLabel}.`,
+      body: `Hora do ${dosageLabel}${personLabel}.`,
       icon: '/icon.jpg',
       badge: '/icon.jpg',
       vibrate: [100, 50, 100],

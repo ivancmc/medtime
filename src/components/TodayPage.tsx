@@ -146,7 +146,7 @@ export function TodayPage() {
       if (!localStorage.getItem(notifiedKey)) {
         const notificationTitle = "Hora do Remédio!";
         const notificationOptions = {
-          body: `É hora de dar ${dose.medicationName} para ${personName}.`,
+          body: `Hora do ${dose.medicationName} para ${personName}.`,
           icon: "/icon.jpg",
           badge: "/icon.jpg",
           vibrate: [200, 100, 200],

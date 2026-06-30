@@ -3,11 +3,18 @@ import { db } from "../lib/db";
 import { Person } from "../types";
 import { format, addHours } from "date-fns";
 import { getOrCreatePushSubscription, registerPushTriggers } from "../lib/push";
-import { CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import type { ToastVariant } from "./Toast";
 
 type PushStatus = "idle" | "loading" | "success" | "error";
 
-export function AddPage({ onAdded }: { onAdded: () => void }) {
+export function AddPage({
+  onAdded,
+  onToast,
+}: {
+  onAdded: () => void;
+  onToast?: (message: string, variant: ToastVariant) => void;
+}) {
   const [people, setPeople] = useState<Person[]>([]);
   const [pushStatus, setPushStatus] = useState<PushStatus>("idle");
   const [pushMessage, setPushMessage] = useState("");
@@ -79,26 +86,31 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
     setPushStatus("loading");
 
     try {
-      // Request permission if not granted yet
       if (Notification.permission === "default") {
         const result = await Notification.requestPermission();
         if (result !== "granted") {
           setPushStatus("error");
-          setPushMessage("Permissão de notificação negada. Os lembretes não serão enviados.");
+          const msg = "Permissão de notificação negada. Os lembretes não serão enviados.";
+          setPushMessage(msg);
+          onToast?.(msg, "error");
           return;
         }
       }
 
       if (Notification.permission === "denied") {
         setPushStatus("error");
-        setPushMessage("Notificações bloqueadas. Habilite-as nas configurações do navegador.");
+        const msg = "Notificações bloqueadas. Habilite-as nas configurações do navegador.";
+        setPushMessage(msg);
+        onToast?.(msg, "error");
         return;
       }
 
       const subscription = await getOrCreatePushSubscription();
       if (!subscription) {
         setPushStatus("error");
-        setPushMessage("Este navegador não suporta Push Notifications.");
+        const msg = "Este navegador não suporta Push Notifications.";
+        setPushMessage(msg);
+        onToast?.(msg, "error");
         return;
       }
 
@@ -109,7 +121,9 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
     } catch (err) {
       console.error("[MedTime] Push scheduling failed:", err);
       setPushStatus("error");
-      setPushMessage("Falha ao agendar notificações. O lembrete foi salvo localmente.");
+      const msg = "Falha ao agendar notificações. O lembrete foi salvo localmente.";
+      setPushMessage(msg);
+      onToast?.(msg, "error");
     }
   }
 
@@ -234,15 +248,13 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
         </button>
       </form>
 
-      {/* Push scheduling feedback — appears after form submit */}
-      {pushStatus !== "idle" && (
+      {/* Push scheduling feedback — only show loading/success inline */}
+      {pushStatus !== "idle" && pushStatus !== "error" && (
         <div
           className={`mt-4 flex items-start gap-3 p-4 rounded-xl text-sm border transition-all ${
             pushStatus === "success"
               ? "bg-app-success-bg border-app-success/30 text-app-success"
-              : pushStatus === "error"
-                ? "bg-app-danger-bg border-app-danger/30 text-app-danger"
-                : "bg-app-primary-bg border-app-primary/20 text-app-primary"
+              : "bg-app-primary-bg border-app-primary/20 text-app-primary"
           }`}
         >
           {pushStatus === "loading" && (
@@ -250,9 +262,6 @@ export function AddPage({ onAdded }: { onAdded: () => void }) {
           )}
           {pushStatus === "success" && (
             <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-          )}
-          {pushStatus === "error" && (
-            <AlertTriangle size={18} className="shrink-0 mt-0.5" />
           )}
           <span>
             {pushStatus === "loading"

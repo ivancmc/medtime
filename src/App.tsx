@@ -14,11 +14,14 @@ import { AddPage } from "./components/AddPage";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PushNotificationManager } from "./components/PushNotificationManager";
+import { ToastContainer } from "./components/Toast";
+import { useToast } from "./hooks/useToast";
 import { Users, Bell, X } from "lucide-react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const { toasts, addToast, dismiss } = useToast();
 
   return (
     <div className="h-[100dvh] flex flex-col bg-app-bg pt-safe font-sans text-app-text overflow-hidden max-w-md mx-auto w-full relative shadow-2xl border-x border-app-border">
@@ -85,7 +88,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <AddPage onAdded={() => setActiveTab("today")} />
+              <AddPage onAdded={() => setActiveTab("today")} onToast={addToast} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -93,6 +96,7 @@ export default function App() {
       <BottomNav activeTab={activeTab} onChange={setActiveTab} />
 
       <PWAInstallPrompt />
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
       {isNotificationOpen && createPortal(
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
