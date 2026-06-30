@@ -133,15 +133,15 @@ async function buildNotificationOptions(scheduledTime) {
       localforage.getItem('medications').then((v) => v ?? []),
     ]);
     const person = people.find((p) => p.id === due.personId);
-    const personLabel = person ? `para ${person.name}` : '';
+    const personLabel = person ? ` para ${person.name}` : '';
 
     const med = medications.find((m) => m.id === due.medicationId);
-    const dosageLabel = med?.dosage ? `${med.dosage} ` : '';
+    const dosageLabel = med?.dosage ? ` (${med.dosage})` : '';
     const antibioticLabel = due.isAntibiotic ? ' (antibiótico)' : '';
 
     return {
       title: `💊 Hora do ${due.medicationName}${antibioticLabel}`,
-      body: `${dosageLabel}${personLabel}`,
+      body: `${due.medicationName}${dosageLabel}${personLabel}`,
       icon: '/icon.jpg',
       badge: '/icon.jpg',
       vibrate: [100, 50, 100],
