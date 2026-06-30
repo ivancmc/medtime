@@ -55,3 +55,27 @@ export async function registerPushTriggers(
     throw error;
   }
 }
+
+/**
+ * Deletes all pending push_trigger rows for the current subscription endpoint.
+ * Call this before re-registering triggers after an edit so stale rows don't fire.
+ *
+ * @param subscription - The active PushSubscription for this device
+ */
+export async function cancelPushTriggers(
+  subscription: PushSubscription,
+): Promise<void> {
+  const endpoint = subscription.endpoint;
+
+  // Supabase stores the full subscription JSON; filter by endpoint inside the jsonb column
+  const { error } = await supabase
+    .from('push_triggers')
+    .delete()
+    .eq('status', 'pending')
+    .filter('subscription->>endpoint', 'eq', endpoint);
+
+  if (error) {
+    console.error('[MedTime] Failed to cancel push triggers:', error.message);
+    // Non-fatal: stale triggers will simply be ignored by the edge function
+  }
+}

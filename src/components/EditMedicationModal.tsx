@@ -2,8 +2,13 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { db } from "../lib/db";
 import { Person, Medication } from "../types";
-import { format, addDays, addHours } from "date-fns";
+import { format, addHours } from "date-fns";
 import { X, Trash2 } from "lucide-react";
+import {
+  getOrCreatePushSubscription,
+  registerPushTriggers,
+  cancelPushTriggers,
+} from "../lib/push";
 
 export function EditMedicationModal({
   medicationId,
@@ -84,6 +89,7 @@ export function EditMedicationModal({
 
     const totalDoses = Math.floor((durationDays * 24) / freqHours);
     let currentDoseTime = startTimestamp;
+    const newTimestamps: number[] = [];
 
     // Recreate pending doses for the future
     for (let i = 0; i < totalDoses; i++) {
@@ -101,6 +107,7 @@ export function EditMedicationModal({
           status: "pending",
           isAntibiotic: medIsAntibiotic,
         });
+        newTimestamps.push(currentDoseTime);
       }
       currentDoseTime = addHours(
         new Date(currentDoseTime),
@@ -109,6 +116,22 @@ export function EditMedicationModal({
     }
 
     onUpdated();
+
+    // ── Sync push triggers with Supabase (non-blocking) ──────────────────
+    void syncPushTriggers(newTimestamps);
+  }
+
+  async function syncPushTriggers(timestamps: number[]) {
+    try {
+      const subscription = await getOrCreatePushSubscription();
+      if (!subscription) return;
+
+      // Remove all pending triggers for this device, then re-register
+      await cancelPushTriggers(subscription);
+      await registerPushTriggers(subscription, timestamps);
+    } catch (err) {
+      console.error("[MedTime] Failed to sync push triggers after edit:", err);
+    }
   }
 
   async function handleDelete() {
